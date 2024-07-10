@@ -1,0 +1,105 @@
+1)
+Find the second highest salary in each department.
+
+ SELECT name,dept.name, max(salary)
+from employees  as emp
+inner join on  departments  as dep dep.department_id =emp.department_id 
+where salary < (SELECT  max(salary) from employees
+
+2)Calculate the difference in sales between each employee's current sale and their previous sale.
+
+
+select employee_id,name ,sale.amount,
+ sale.amount - LAG(sale.amount) OVER (PARTTION BY employee_id  ORDER BY sale.sale_date) as sale_diff
+
+from employees AS emp
+
+INNER join sales as sale ON sale.employee_id=emp.employee_id
+
+order by emp.employee_id,
+sale.sale_id
+
+3)
+Retrieve the average salary of employees in each department and the difference of each employee's salary from the department's average salary.
+
+
+
+
+select emp.employee_id,emp.name ,emp.salary,dept.department_id,
+ AVG(salary) OVER (PARITION BY employee_id  ORDER BY dept.department_id) as depart_diff,
+ emp.salary =AVG(emp.salary) OVER (PARITION BY employee_id  ORDER BY dept.department_id) as sal_diff,
+from employees AS emp
+INNER join departments as dept ON dept.department_id=emp.department_id
+order by emp.employee_id,
+dept.department_id
+
+
+
+4)Find the cumulative percentage of total sales amount for each employee.
+
+select emp.employee_id,emp.name ,sale.amount,
+sum(sale.amount) OVER (PARTITION BY emp.employee_id  ORDER BY sale.sale_date) as cum_sales,
+ 100 * sum(sale.amount) OVER (PARTITION BY  emp.employee_id  ORDER BY sale.sale_date) /
+ sum(sale.amount) OVER (PARTITION BY  emp.employee_id ) as cum_percen
+ 
+from employees AS emp
+
+INNER join sales as sale ON sale.employee_id=emp.employee_id
+
+order by emp.employee_id,
+sale.sale_id
+
+5)Retrieve the top 3 most expensive products in each category.
+
+
+select  prd.product_id,prd.product_name,pr.price,
+NUM_ROWS() OVER (PARTITION BY ord.order_id  ORDER BY prd.price) as top_three,
+
+
+from products AS prd
+
+INNER join orders as ord ON ord.product_id=products.product_id
+
+
+where top_three < =3
+order by ord.order_id,
+
+6)
+Calculate the year-to-date (YTD) sales for each employee.
+
+
+
+select emp.employee_id,emp.name ,sum(sale.amount) as yr_sales,
+from employees AS emp
+INNER join sales as sale ON sale.employee_id=emp.employee_id
+WHERE YEAR(sale.sale_date)=YEAR(CURRENT_DATE)
+GROUP BY  emp.employee_id
+
+
+7)
+
+Retrieve the sales of each employee as a percentage of the total sales in their department.
+
+select emp.employee_id,emp.name ,sale.amount,dept.department_id,
+100* sale.amount  / SUM(sale.amount) OVER (PARTITION BY dept.department_id) as sales_per,
+
+from employees AS emp
+INNER join sales as sale ON sale.employee_id=emp.employee_id
+
+INNER join departmet as dept ON sale.department_id=emp.department_id
+Group BY  emp.employee_id,sale.sale_date
+
+Retrieve the name and total sales amount for the employee with the second highest total sales.
+
+
+select emp.name ,sum(sale.amount) as total_sales_amount
+100* sale.amount  / SUM(sale.amount) OVER (PARTITION BY dept.department_id) as sales_per,
+
+from employees AS emp
+INNER join sales as sale ON sale.employee_id=emp.employee_id
+
+Group BY   emp.name
+order by total_sales_amount DESC
+OFFSET 1 ROW
+FETCH NEXT 1 ROW ONLY
+
